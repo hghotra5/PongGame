@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Pong Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+        }
+        canvas {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pong" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('pong');
+        const context = canvas.getContext('2d');
+
+        const paddleWidth = 10, paddleHeight = 100, ballSize = 10;
+        const player = { x: 0, y: (canvas.height - paddleHeight) / 2, width: paddleWidth, height: paddleHeight, dy: 0 };
+        const computer = { x: canvas.width - paddleWidth, y: (canvas.height - paddleHeight) / 2, width: paddleWidth, height: paddleHeight, dy: 0 };
+        const ball = { x: canvas.width / 2, y: canvas.height / 2, size: ballSize, dx: 4, dy: 4 };
+
+        function drawRect(x, y, w, h) {
+            context.fillStyle = '#000';
+            context.fillRect(x, y, w, h);
+        }
+
+        function drawBall(x, y, size) {
+            context.fillStyle = '#000';
+            context.beginPath();
+            context.arc(x, y, size, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        function movePaddle(paddle) {
+            paddle.y += paddle.dy;
+            if (paddle.y < 0) paddle.y = 0;
+            if (paddle.y + paddle.height > canvas.height) paddle.y = canvas.height - paddle.height;
+        }
+
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+            if (ball.y < 0 || ball.y + ball.size > canvas.height) ball.dy *= -1;
+
+            const hitPlayer = ball.x <= player.x + player.width && ball.y > player.y && ball.y < player.y + player.height;
+            const hitComputer = ball.x + ball.size >= computer.x && ball.y > computer.y && ball.y < computer.y + computer.height;
+            if (hitPlayer || hitComputer) ball.dx *= -1;
+
+            if (ball.x < 0 || ball.x > canvas.width) resetBall();
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = 4 * (Math.random() > 0.5 ? 1 : -1);
+        }
+
+        function update() {
+            movePaddle(player);
+            movePaddle(computer);
+            moveBall();
+            computerAI();
+        }
+
+        function computerAI() {
+            if (ball.y < computer.y + computer.height / 2) {
+                computer.dy = -4;
+            } else {
+                computer.dy = 4;
+            }
+        }
+
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawRect(player.x, player.y, player.width, player.height);
+            drawRect(computer.x, computer.y, computer.width, computer.height);
+            drawBall(ball.x, ball.y, ball.size);
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') player.dy = -6;
+            if (e.key === 'ArrowDown') player.dy = 6;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player.dy = 0;
+        });
+
+        loop();
+    </script>
+</body>
+</html>
+
